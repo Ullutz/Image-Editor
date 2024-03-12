@@ -1,0 +1,97 @@
+Bălteanu Vlad
+311 CA
+
+Image_editor: La aceasta tema ni se cere sa cream un program ce poate deschide
+anumite tipuri de fisier și poate aplica operatii pe pozele date. Pentru rezolvarea 
+acestei teme am folosit o structura in care retin tipul pozei, numarul de linii,
+respectiv coloane, valoarea maxima pe care o poate lua un pixel si 2 matrici. Prima
+o folosesc pentru a retine pozele de tip .pgm (cu tonuri de gri), iar a doua, fiind
+declarata ca o structura ce retine 3 valori: nuantele de rosu, verde si albastru, o
+folosesc pentru a retine pozele de tip .ppm (color). Astfel, in fiecare functie pe
+care o folosesc, pun o conditie pentru a stabili cu care tip de poza am de a face.
+
+In cele ce urmeaza voi descrie cum am abordat fiecare dintre operatii.
+
+LOAD: 
+Pentru operatia de incarcare in memorie a unei poze, am folosit mai multe functii.
+In primul rand, folosesc o functie pentru a citi numele fisierului pe care doresc
+sa-l deschid. Apoi, tot in functia principala, deschid fisierul ca binar, pentru a citi
+tipul pozei pe care o incarc. Pe urma, inchid fisierul si in functie de magic word-ul
+citit apelez una din cele 4 functii de load. Acestea sunt facute pentru fiecare tip
+de poze: poze gri text, gri binar, poza color text, color binar. Mai mult, in aceste
+functii citesc si numarul de linii, de coloane si valoarea maxima pe care o pot lua
+pixelii. Desigur, am grija ca atunci cand un rand incepe cu '#' sa nu-l iau in consi-
+derare, avand in vedere ca acesta este un comentariu. Atunci cand ajung la matricea de
+pixeli, in functie de magic word, imi aloc una din cele doua matrici cu nr_linii * nr_co-
+loane elemente de tip int (pentru poze gri), respectiv de tip RGB (pentru poze color) si
+citesc elemetele din fisier. Pentru a putea incarca mai multe poze in memorie, la fiecare
+apelare a functiei load, dealoc memoria folosita pentru poza anterior retinuta.
+
+SELECT:
+Pentru operatia de select folosesc o functie in care doar compar valorile citite de la
+tastatura cu 0 (pentru coordonatele coltului stanga sus) si cu numarul de linii, respectiv
+coloane (pentru coordonatele coltului dreapta jos). Daca valorile sunt valide, le retin
+in doua valori separate, acestea fiind structuri de tip corner, in care stochez coordonatele
+punctului.
+
+SELECT ALL:
+In cadrul functiei de SELECT, consider un caz, in care in loc de citirea unor coordonate,
+citesc sirul ALL. In acest caz, coordonatele colturilor vor deveni 0-0 (coltul stanga sus
+al pozei) si nr_linii-nr_coloane (coltul dreapta jos al pozei).
+
+HISTOGRAM:
+Pentru aceasta operatie folosesc un vector de frecventa in care stochez numarul de aparitii
+al fiecarei valori de pixeli de la 0 la 255. Cu toate acestea, impart acele valori in y
+intervale, iar suma frecventelor devine frecventa intervalului. Apoi, afisez dupa formula data
+histograma pozei.
+
+EQUALIZE:
+La aceasta operatie am folosit acelasi principiu ca la histograma, doar ca nu am facut 
+frecventa intervalelor, ci a fiecarei valori de la 0 la 255. Apoi, folosind formula data
+in cerinta, am modificat fiecare fixel in parte.
+
+ROTATE:
+Pentru aceasta operatie am considerat doua cazuri. Inainte de a incepe, am modificat valoarea
+unghiului pe care-l citesc astfel: impart valoarea lui la 90, apoi daca unghiul este mai mic ca 
+0, adaug 4. Am facut aceste operatii pentru a nu mai luat cazuri separate de rotire la stanga
+si rotire la dreapta (o rotire la stanga este defapt acelasi lucru cu 3 rotiri la deapta).
+Asadar, cele 2 cazuri sunt rotirea intregii poze si rotirea unei selectii. Pentru ambele am
+folosit acelasi principiu: alocarea unei matrici auxiliare si copierea in ea a valorilor de
+care am nevoie. Doar ca, la rotirea intregii matrici, am grija sa interschimb numarul de linii
+cu cel de coloane si sa realoc matricea de pixeli cu noile dimensiuni. La rotirea unei selectii,
+nu am nevoie sa fac aceste operatii, intrucat selectia trebuie sa fie patratica, astfel dimensiunile
+dupa rotire nu se schimba.
+
+CROP:
+Pentru a taia o poza dupa selectia curenta, am folosit o matrice auxiliara in care mi-am copiat
+doar valorile din intervalul [corner1.x,corner2.x) si [corner1.y,corner2.y). Apoi am eliberat
+memoria matricei de pixeli si am alocat-o cu noile dimensiuni:( corner2.x - corner1.x) * 
+* (corner2.y - corner1.y) si recopiez valorile necesare.
+
+APPLY:
+La aceasta operatie am creat o functie care-mi aplica efectul pe fiecare canal de culoare al
+fiecarui pixel. Astfel, aceasta functie primeste pixelul, kernelul efectului pe care vreau
+sa-l aplic si o valoare care pentru BlUR si GAUSSIAN BLUR este 9 sau 16, pentru a impartii
+valoarea obtinuta la final. Apoi pentru fiecare efect in parte folosesc cate o functie in 
+care imi initializez fiecare kernel dupa valorile date in cerinta si apalez functia de aplicare
+efect.
+
+SAVE:
+Pentru operatia de save am utilizat o functie in care am luat 2 cazuri. Pentru primul caz, am
+verificat daca dupa citirea numelui cu care salvez fisierul citesc sirul ascii. Astfel, daca salvez
+o poza gri afisez magic word-ul P2 si restul valorilor ca text. Pentru pozele color afisez P3 si dupa
+restul valorilor conform formatului. In cazul in care nu citesc sirul ascii, inseamna ca doresc sa
+salvez poza sub format binar. Pentru poze gri scriu in fisier P5, iar pentru poze color scriu P6.
+Apoi salvez celalte valori ca text, iar matricea de pixeli o scriu eficient sub forma binara, pe 
+cate un octet.
+
+EXIT:
+La citirea comenzii EXIT verific mai intai daca am o poza incarcata in memorie pana la citirea
+comenzii. Daca da, opresc rularea programului si eliberez ultima poza incarcata(daca este cazul).
+Eliberez doar ultima poza, pentru ca, asa cum am scris eu functia load, la incarcarea unei noi poze,
+o eliberez pe cea de dinainte. Astfel, mai am de eliberat doar ultima poza. In caz ca niciun load
+nu a reusit, nu opresc rularea programului.
+
+NOTA: pentru fiecare alocare de care am vorbit in acest README, am aplicat programarea defensiva.
+Astfel, daca vreuna din alocari esueaza, afisez la stderr ca nu am putut aloca memorie, eliberez
+toate resursele folosite pana atunci si opresc rularea programului.
